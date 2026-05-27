@@ -1,0 +1,28 @@
+# Enforce consistent line endings in repository
+# Default: detect text files and normalize
+* text=auto
+
+# Force LF for common text/source files (recommended for Go/Terraform projects)
+*.go text eol=lf
+*.mod text eol=lf
+*.sum text eol=lf
+*.md text eol=lf
+*.markdown text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.tf text eol=lf
+*.hcl text eol=lf
+*.sh text eol=lf
+*.json text eol=lf
+
+# Binary files -- don't modify line endings
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.zip binary
+*.exe binary
+*.dll binary
+
+# Ensure the gitattributes file itself is normalized
+.gitattributes text eol=lf
