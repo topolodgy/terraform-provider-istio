@@ -24,10 +24,10 @@ type istioCRDDataSource struct {
 
 // crdDataSourceModel is the Terraform state model for CRD data sources.
 type crdDataSourceModel struct {
-	Name      types.String `tfsdk:"name"`
-	Namespace types.String `tfsdk:"namespace"`
-	ID        types.String `tfsdk:"id"`
-	Manifest  types.String `tfsdk:"manifest"`
+	Name      types.String               `tfsdk:"name"`
+	Namespace types.String               `tfsdk:"namespace"`
+	ID        types.String               `tfsdk:"id"`
+	Manifest  helper.ManifestStringValue `tfsdk:"manifest"`
 }
 
 // NewIstioCRDDataSource creates a datasource.DataSource factory for the given CRD definition.
@@ -109,7 +109,7 @@ func (d *istioCRDDataSource) Read(ctx context.Context, req datasource.ReadReques
 		Name:      config.Name,
 		Namespace: config.Namespace,
 		ID:        types.StringValue(helper.IdFromObject(obj)),
-		Manifest:  types.StringValue(string(raw)),
+		Manifest:  helper.ManifestStringValue{StringValue: types.StringValue(string(raw))},
 	}
 	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
 }

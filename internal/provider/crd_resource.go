@@ -39,9 +39,9 @@ type istioCRDResource struct {
 
 // crdModel is the Terraform state model shared by all CRD resources.
 type crdModel struct {
-	ID       types.String   `tfsdk:"id"`
-	Manifest types.String   `tfsdk:"manifest"`
-	Timeouts timeouts.Value `tfsdk:"timeouts"`
+	ID       types.String               `tfsdk:"id"`
+	Manifest helper.ManifestStringValue `tfsdk:"manifest"`
+	Timeouts timeouts.Value             `tfsdk:"timeouts"`
 }
 
 // CRDResourceDef defines a single Istio CRD resource for registration.
@@ -196,7 +196,7 @@ func (r *istioCRDResource) Create(ctx context.Context, req resource.CreateReques
 		resp.Diagnostics.AddError(fmt.Sprintf("Create %s failed", r.kind), err.Error())
 		return
 	} else {
-		plan.Manifest = types.StringValue(normalized)
+		plan.Manifest = helper.ManifestStringValue{StringValue: types.StringValue(normalized)}
 	}
 	plan.ID = types.StringValue(helper.IdFromObject(obj))
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
@@ -227,7 +227,7 @@ func (r *istioCRDResource) Read(ctx context.Context, req resource.ReadRequest, r
 		resp.Diagnostics.AddError(fmt.Sprintf("Read %s failed", r.kind), err.Error())
 		return
 	}
-	state.Manifest = types.StringValue(raw)
+	state.Manifest = helper.ManifestStringValue{StringValue: types.StringValue(raw)}
 	state.ID = types.StringValue(helper.IdFromObject(obj))
 	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
 }
@@ -254,7 +254,7 @@ func (r *istioCRDResource) Update(ctx context.Context, req resource.UpdateReques
 		resp.Diagnostics.AddError(fmt.Sprintf("Update %s failed", r.kind), err.Error())
 		return
 	} else {
-		plan.Manifest = types.StringValue(normalized)
+		plan.Manifest = helper.ManifestStringValue{StringValue: types.StringValue(normalized)}
 	}
 	plan.ID = types.StringValue(helper.IdFromObject(obj))
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
