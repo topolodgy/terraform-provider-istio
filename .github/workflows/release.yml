@@ -1,0 +1,45 @@
+# Terraform Provider release workflow.
+# Triggered on version tags (v*). Uses GoReleaser to build multi-platform
+# binaries, checksums, and GPG signatures for the Terraform Registry.
+#
+# Prerequisites:
+#   - GPG_PRIVATE_KEY secret: ASCII-armored GPG private key
+#   - GPG_FINGERPRINT  secret: GPG key fingerprint (short or long form)
+#   - GITHUB_TOKEN: automatically provided by GitHub Actions
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  goreleaser:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: "go.mod"
+          cache: true
+
+      - name: Import GPG key
+        uses: crazy-max/ghaction-import-gpg@v6
+        id: import_gpg
+        with:
+          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.PASSPHRASE }}
+
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}

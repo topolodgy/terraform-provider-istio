@@ -1,0 +1,65 @@
+name: Acceptance Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: acc-${{ github.repository }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  acc:
+    name: Acceptance tests (Kind + Istio)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Install kubectl
+        run: |
+          set -euo pipefail
+          curl -fsSL "https://dl.k8s.io/release/$(curl -fsSL https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" -o kubectl
+          chmod +x kubectl
+          sudo mv kubectl /usr/local/bin/kubectl
+
+      - name: Create Kind cluster
+        run: |
+          set -euo pipefail
+          KIND_VERSION="v0.27.0"
+          curl -fsSL "https://kind.sigs.k8s.io/dl/${KIND_VERSION}/kind-linux-amd64" -o kind
+          chmod +x kind
+          sudo mv kind /usr/local/bin/kind
+          kind create cluster --name istio-acc --wait 5m
+          kubectl cluster-info --context kind-istio-acc
+
+      - name: Install Istio
+        run: |
+          set -euo pipefail
+          curl -sL https://istio.io/downloadIstio | ISTIO_VERSION=1.24.2 sh -
+          cd istio-1.24.2
+          export PATH="$PWD/bin:$PATH"
+          istioctl install -y --set profile=minimal
+          kubectl wait --for=condition=available deployment/istiod -n istio-system --timeout=300s
+
+      - name: Run plan-only acceptance tests
+        env:
+          TF_ACC: "1"
+        run: go test ./internal/provider/... -run TestAccPlanOnly -count=1 -timeout 30m -v
+
+      - name: Run lifecycle acceptance tests
+        env:
+          TF_ACC: "1"
+        run: go test ./internal/provider/... -run TestAccLifecycle -count=1 -timeout 45m -v
