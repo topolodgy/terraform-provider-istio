@@ -11,7 +11,8 @@ func TestAccLifecycle_RemoteClusterSecret(t *testing.T) {
 	testAccPreCheck(t)
 
 	clusterName := fmt.Sprintf("tf-acc-%s", resource.UniqueId())
-	importID := fmt.Sprintf("istio-system/istio-remote-secret-%s", clusterName)
+	secretID := fmt.Sprintf("istio-system/istio-remote-secret-%s", clusterName)
+	importID := fmt.Sprintf("istio-system/%s", clusterName)
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: ProtoV6ProviderFactories(),
@@ -19,7 +20,7 @@ func TestAccLifecycle_RemoteClusterSecret(t *testing.T) {
 			{
 				Config: testAccRemoteClusterSecretConfig(clusterName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("istio_remote_cluster_secret.test", "id", importID),
+					resource.TestCheckResourceAttr("istio_remote_cluster_secret.test", "id", secretID),
 					resource.TestCheckResourceAttr("istio_remote_cluster_secret.test", "cluster_name", clusterName),
 				),
 			},
@@ -30,7 +31,7 @@ func TestAccLifecycle_RemoteClusterSecret(t *testing.T) {
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"token"},
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("istio_remote_cluster_secret.test", "id", importID),
+					resource.TestCheckResourceAttr("istio_remote_cluster_secret.test", "id", secretID),
 					resource.TestCheckResourceAttr("istio_remote_cluster_secret.test", "cluster_name", clusterName),
 				),
 			},
